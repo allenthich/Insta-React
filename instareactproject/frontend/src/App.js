@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { Component } from 'react';
 import './App.css';
+import TitleService from './TitleService';
+const titleService = new TitleService();
 
-class SearchComponent extends React.Component {
+class SearchComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
@@ -43,9 +45,16 @@ class SearchComponent extends React.Component {
     }
     // TODO: Search query via API and display results
   }
+
+  componentDidMount() {
+    var  self  =  this;
+    titleService.getTitle().then(function (result) {
+        self.setState({ items:  result.data})
+    });
+}
 }
 
-class MediaList extends React.Component {
+class MediaList extends Component {
   render() {
     return (
       <ul>

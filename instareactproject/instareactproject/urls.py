@@ -20,5 +20,5 @@ from django.conf.urls import url
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^api/title/tt\d{7}$', views.title),
+    url(r'^api/title/$', views.title),
 ]

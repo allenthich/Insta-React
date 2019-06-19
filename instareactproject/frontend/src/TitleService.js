@@ -6,7 +6,7 @@ export default class TitleService{
     constructor(){}
 
     getTitle(titleName) {
-        const url = `${API_URL}/api/title/${titleName}`;
+        const url = `${API_URL}/api/title?titleName=${titleName}`;
         return axios.get(url).then(response => response.data);
     }
 }

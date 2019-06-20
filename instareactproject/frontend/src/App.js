@@ -7,7 +7,8 @@ class SearchComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
-      title: {},
+      titles: [],
+      numTitles: 0,
       query: "",
     }
     this.handleChange = this.handleChange.bind(this);
@@ -16,20 +17,29 @@ class SearchComponent extends Component {
 
   render() {
     return (
-      <div>
-        <h3>Search</h3>
-        <MediaList title={this.state.title}/>
-        <form onSubmit={this.handleSubmit}>
-          <label htmlFor="new-search">
-            Enter a movie or TV-series:
-          </label>
-          <input
-            id="new-search"
-            onChange={this.handleChange}
-            value={this.state.query}
-          />
-          <button>Search</button>
-        </form>
+      <div className="container">
+        <div className="container">
+          <h3>Search</h3>
+          <div className="form-group">
+            <form onSubmit={this.handleSubmit}>
+              <div className="input-group mb-3">
+                <input
+                  id="new-search"
+                  onChange={this.handleChange}
+                  value={this.state.query}
+                  className="form-control"
+                  placeholder="Enter a movie or series title"
+                />
+                <div className="input-group-append">
+                  <button className="btn btn-outline-secondary" type="submit" id="button-addon2">Search</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div className="container">
+          <MediaList titles={this.state.titles}/>
+        </div>
       </div>
     );
   }
@@ -43,9 +53,10 @@ class SearchComponent extends Component {
     if (!this.state.query.length) {
       return;
     }
-    titleService.getTitle(this.state.query).then((res) =>
+    titleService.getTitles(this.state.query).then((res) =>
       this.setState(state => ({
-        title: res,
+        titles: res['Search'],
+        numTitles: res['totalResults'],
         query: ''
       }))
     );
@@ -55,10 +66,17 @@ class SearchComponent extends Component {
 class MediaList extends Component {
   render() {
     return (
-      <div>
-        <img src={this.props.title.Poster} alt=""></img>
-        <div>{this.props.title.Title}</div>
-      </div>
+      <ul className="list-unstyled">
+        {this.props.titles.map(title => (
+          <li className="media my-4" key={title.imdbID}>
+            <img src={title.Poster} className="mr-3" alt=""></img>
+            <div className="media-body">
+              <h5 className="mt-0 mb-1">{title.Title}</h5>
+              {title.Year}
+              </div>
+          </li>
+        ))}
+      </ul>
     );
   }
 }

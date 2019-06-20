@@ -9,4 +9,9 @@ export default class TitleService{
         const url = `${API_URL}/api/title?titleName=${titleName}`;
         return axios.get(url).then(response => response.data);
     }
+
+    getTitles(titleName) {
+        const url = `${API_URL}/api/title?search=${titleName}`;
+        return axios.get(url).then(response => response.data);
+    }
 }

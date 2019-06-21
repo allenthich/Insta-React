@@ -7,12 +7,30 @@ class SearchComponent extends Component {
   constructor(props) {
     super(props)
     this.state = {
+      query: "",
       titles: [],
       numTitles: 0,
-      query: "",
+      dateDescending: true,
     }
-    this.handleChange = this.handleChange.bind(this);
+    this.handleQueryChange = this.handleQueryChange.bind(this);
+    this.handleSelectChange = this.handleSelectChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  sortByDateAsc() {
+    if (!this.state.dateDescending)
+      return
+    // TODO: Reverse in place vs. other sort methods
+    this.state.titles.sort((a, b) => (new Date(a.first_air_date) - new Date(b.first_air_date)))
+    this.setState({dateDescending: false});
+  }
+
+  sortByDateDesc() {
+    if (this.state.dateDescending)
+      return
+    // TODO: Reverse in place vs. other sort methods
+    this.state.titles.sort((a, b) => (new Date(b.first_air_date) - new Date(a.first_air_date)))
+    this.setState({dateDescending: true});
   }
 
   render() {
@@ -26,7 +44,7 @@ class SearchComponent extends Component {
               placeholder="Enter a TV series title" 
               aria-label="Search"
               id="new-search"
-              onChange={this.handleChange}
+              onChange={this.handleQueryChange}
               value={this.state.query}
             />
             <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
@@ -38,14 +56,31 @@ class SearchComponent extends Component {
          />
         </nav>
         <div className="container">
+          <div className="input-group mb-3">
+            <div className="input-group-prepend">
+              <label className="input-group-text">Sort:</label>
+            </div>
+            <select value={this.state.dateDescending} className="custom-select" onChange={this.handleSelectChange}>
+              <option value="true">Date Descending</option>
+              <option value="false">Date Ascending</option>
+            </select>
+          </div>
           <MediaList titles={this.state.titles}/>
         </div>
       </div>
     );
   }
 
-  handleChange(e) {
+  handleQueryChange(e) {
     this.setState({query: e.target.value});
+  }
+
+  handleSelectChange(e) {
+    if (e.target.value === "true") {
+      this.sortByDateDesc()
+    } else {
+      this.sortByDateAsc()
+    }
   }
 
   handleSubmit(e) {
@@ -54,11 +89,12 @@ class SearchComponent extends Component {
       return;
     }
     titleService.getTitles(this.state.query).then((res) =>
-      this.setState(state => ({
+      this.setState(prevState => ({
         titles: res['results']
-        .sort((a, b) => (new Date(b['first_air_date']) - new Date(a['first_air_date']))),
+          .sort((a, b) => (new Date(b.first_air_date) - new Date(a.first_air_date))),
         numTitles: res['total_results'],
-        query: ''
+        query: '',
+        dateDescending: true
       }))
     );
   }
@@ -67,7 +103,7 @@ class SearchComponent extends Component {
 class MediaList extends Component {
   render() {
     return (
-      <ul className="list-unstyled">
+        <ul className="list-unstyled">
         {this.props.titles.map(title => (
           <li className="media my-4 li-height-200" id={title.id} key={title.id}>
             <img src={'https://image.tmdb.org/t/p/w500' + title.poster_path} className="mr-3 object-fit-cover" alt=""></img>

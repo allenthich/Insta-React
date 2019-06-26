@@ -99,18 +99,74 @@ class SearchComponent extends Component {
     );
   }
 }
+class MediaListItem extends Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      collapse: true,
+      cast: [],
+      numCast: -1
+    }
+    this.handleToggle = this.handleToggle.bind(this)
+  }
 
+  retrieveCast() {
+    if (this.state.numCast >= 0) {
+      return
+    }
+    titleService.getTitleCast(this.props.titleId).then((res) =>
+      this.setState(prevState => ({
+        cast: res.cast,
+        numCast: res.cast.length
+      }))
+    );
+  }
+
+  handleToggle() {
+    this.retrieveCast()
+    this.setState({collapse: !this.state.collapse})
+  }
+
+  render() {
+    const show = (this.state.collapse ? "" : ".show")
+    const dimensionStyles = { height: '200px', width: '120px', 'object-fit': 'contain' };
+    return (
+      <div>
+        <button className="btn btn-primary" type="button" onClick={this.handleToggle}>
+          View Cast
+        </button>
+        <div className={"collapse" + show}>
+          <div className="card card-body">
+            <ul className="list-unstyled">
+            {this.state.cast.map(member => (
+              <li className="media my-4 li-height-200" id={member.id} key={member.id}>
+                <img src={'https://image.tmdb.org/t/p/w500' + member.profile_path} className="mr-3 object-fit-cover" style={dimensionStyles} alt=""></img>
+                <div className="media-body">
+                  <h5 className="mt-0 mb-1">{member.name}</h5>
+                  {member.character}
+                </div>
+              </li>
+            ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
+  }
+}
 class MediaList extends Component {
   render() {
+    const dimensionStyles = { height: '200px', width: '120px', 'object-fit': 'contain' };
     return (
         <ul className="list-unstyled">
         {this.props.titles.map(title => (
-          <li className="media my-4 li-height-200" id={title.id} key={title.id}>
-            <img src={'https://image.tmdb.org/t/p/w500' + title.poster_path} className="mr-3 object-fit-cover" alt=""></img>
+          <li className="media my-4" id={title.id} key={title.id}>
+            <img src={'https://image.tmdb.org/t/p/w500' + title.poster_path} className="mr-3 object-fit-cover" style={dimensionStyles} alt=""></img>
             <div className="media-body">
               <h5 className="mt-0 mb-1">{title.name}</h5>
               {title.overview}
-              </div>
+              <MediaListItem titleId={title.id}/>
+            </div>
           </li>
         ))}
       </ul>

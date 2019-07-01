@@ -1,57 +1,49 @@
 import requests
+import sys
+from . import services
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from instareactproject import settings
-
-TMDB_HEADERS = {
-    'Authorization' : settings.TMDb_ACCESS_TOKEN,
-    'Content-Type' : 'application/json;charset=utf-8'
-}
 
 @api_view(["GET"])
 def title(request):
     """
     Returns list of titles
     """
-    return Response(status=status.HTTP_200_OK, data=getTMdbTitle(request))
+    if not request.GET.get('query') and not request.GET.get('titleName'):
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={'message': 'Query not provided!'})
 
-# TMdb API title 
-def getTMdbTitle(request):
-    # Individual title query
-    if request.GET.get('titleName'):
-        urlQuery = request.GET['titleName']
-    # Multiple title query
-    elif request.GET.get('query'):
-        urlQuery = request.GET['query']
-    # TODO: Pagination, language 
-    tmdbUrl = "https://api.themoviedb.org/4/search/tv?query=" + urlQuery
-    tmdbResponse = requests.get(tmdbUrl, headers=TMDB_HEADERS)
-    return tmdbResponse.json()
-
-# OMdb API title 
-def getOMdbTitle(request):
-    # Individual title query
-    if request.GET.get('titleName'):
-        urlQuery = "&t=" + request.GET['titleName']
-    # Multiple title query
-    elif request.GET.get('query'):
-        urlQuery = "&s=" + request.GET['query']
-
-    omdbUrl = "http://www.omdbapi.com/?apikey=" + settings.OMDB_API_KEY + urlQuery
-    omdbResponse = requests.get(omdbUrl)
-    return omdbResponse.json()
+    rStatus, rData = status.HTTP_500_INTERNAL_SERVER_ERROR, None
+    try:
+        query = request.GET['query'] or request.GET['titleName']
+        rData = services.getTMdbTitle(request, query)
+        rStatus = status.HTTP_200_OK
+    except requests.exceptions.RequestException as err:
+        print(err)
+        rStatus = status.HTTP_500_INTERNAL_SERVER_ERROR if status.is_server_error(err.response.status_code) else status.HTTP_400_BAD_REQUEST
+        rData = {
+            "page": 0,
+            "total_results": 0,
+            "total_pages": 0,
+            "results": [],
+            "message": err
+        }
+    return Response(status=rStatus, data=rData.json())
 
 @api_view(["GET"])
 def cast(request, titleId):
     """
     Returns list of cast members from a title
     """
-    tmdbUrl = "https://api.themoviedb.org/3/tv/" + titleId + "/credits?api_key=" + settings.TMDb_API_KEY
-    tmdbResponse = requests.get(tmdbUrl, headers=TMDB_HEADERS)
-    
-    if tmdbResponse.status_code == requests.codes.ok:
-        return Response(status=status.HTTP_200_OK, data=tmdbResponse.json())
-    else:
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    rStatus, rData = status.HTTP_500_INTERNAL_SERVER_ERROR, None
+    res = services.getTMdbCast(request, titleId)
+    if res.status_code == requests.codes['ok']:
+        MAX_CAST_LOOKUP = 3
+        rData = res.json()
+        rStatus = res.status_code
+        for i in range(MAX_CAST_LOOKUP):
+            # TODO: Catch AJAX, check if valid name
+            cxItem = services.getFirstCXUrl(rData['cast'][i]['name']).data
+            rData['cast'][i]['item'] = cxItem
+    return Response(status=rStatus, data=rData)

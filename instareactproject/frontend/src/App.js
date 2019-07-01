@@ -144,6 +144,9 @@ class MediaListItem extends Component {
                 <div className="media-body">
                   <h5 className="mt-0 mb-1">{member.name}</h5>
                   {member.character}
+                  {member.item && (
+                    <p><a href={member.item.link}>{member.item.title}</a></p>
+                  )}
                 </div>
               </li>
             ))}

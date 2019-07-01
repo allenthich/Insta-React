@@ -20,6 +20,6 @@ from django.conf.urls import url
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^api/title/$', views.title),
-    url(r'^api/title/(?P<titleId>\d{3,7})/cast$', views.cast),
+    url(r'^api/title/$', views.title, name="api-title"),
+    url(r'^api/title/(?P<titleId>\d{3,7})/cast$', views.cast, name="api-cast"),
 ]
